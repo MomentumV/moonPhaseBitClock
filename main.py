@@ -7,7 +7,7 @@ import array
 from machine import Pin
 from ota import OTAUpdater
 from WIFI_CONFIG import SSID, PASSWORD
-#from maps import RINGMAP,MODEMAPS #will uncomment on next release
+from maps import RINGMAP,MODEMAPS 
 import rp2
 
 #configure settings:
@@ -20,7 +20,7 @@ tz_offset = tz_offset_hrs * 60 * 60
 NUM_LEDS = 64
 COL = 8 #used for clearer indexing math
 PIN_NUM = 22  #gpio used for Neopixel grid
-brightness = 0.1 # helps with power consumption as well
+brightness = 0.1 # helps limit power consumption as well
 # each pixel can pull almost 60 mA at full power.
 # marginal usb power supply will cause issues.
 
@@ -63,8 +63,6 @@ def pixels_set(i, color):
 #lunar phase constants
 BASE = 1610514000  # 2021 Jan 13 5:00 UTC new moon
 PERIOD = 2551443  # average lunation length in seconds
-RINGMAP = [60,59,61,58,62,57,63,56,55,48,47,40,39,32,31,24,23,16,15,8,7,0,6,1,5,2,4,3]
-
 
 def moonpixels(t = time.time()): # no tz offset for lunar phase; use UTC
     numerator = (t - BASE) % PERIOD  # seconds into current moon phase
@@ -153,9 +151,7 @@ led.on()
 set_time()
 print(time.localtime())
 ota_updater = OTAUpdater(SSID, PASSWORD, firmware_url, "main.py")
-ota_updater2 = OTAUpdater(SSID, PASSWORD, firmware_url, "maps.py")
 ota_updater.download_and_install_update_if_available()
-ota_updater2.download_and_install_update_if_available()
 led.off()
 while True:
     t=time.localtime(time.time()+tz_offset)
@@ -165,11 +161,11 @@ while True:
     d=f'{t[2]:06b}'
     M=f'{t[1]:06b}'
     for i in range(6):
-        pixels_set(i+1+1*COL,[BLACK,BLUE][int(s[i])])
-        pixels_set(i+1+2*COL,[BLACK,GREEN][int(m[i])])
-        pixels_set(i+1+3*COL,[BLACK,RED][int(h[i])])
-        pixels_set(i+1+5*COL,[BLACK,YELLOW][int(d[i])])
-        pixels_set(i+1+6*COL,[BLACK,CYAN][int(M[i])])
+        pixels_set(63-(i+1+1*COL),[BLACK,BLUE][int(s[i])])
+        pixels_set(63-(i+1+2*COL),[BLACK,GREEN][int(m[i])])
+        pixels_set(63-(i+1+3*COL),[BLACK,RED][int(h[i])])
+        pixels_set(63-(i+1+5*COL),[BLACK,YELLOW][int(d[i])])
+        pixels_set(63-(i+1+6*COL),[BLACK,CYAN][int(M[i])])
     ring_values = moonpixels(time.time()) # no tz offset for moon phase
     for i in range(len(RINGMAP)):
         pixels_set(RINGMAP[i],ring_values[i])
