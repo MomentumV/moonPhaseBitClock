@@ -5,10 +5,12 @@ import struct
 import machine
 import array
 from machine import Pin
+import rp2
+
+# local imports
 from ota import OTAUpdater
 from WIFI_CONFIG import SSID, PASSWORD
 from maps import RINGMAP,MODEMAPS 
-import rp2
 
 #configure settings:
 firmware_url = "https://raw.githubusercontent.com/momentumv/moonPhaseBitClock/main/"
@@ -61,8 +63,8 @@ def pixels_set(i, color):
     ar[i] = (color[1]<<16) + (color[0]<<8) + color[2]
  
 #lunar phase constants
-BASE = 1610514000  # 2021 Jan 13 5:00 UTC new moon
-PERIOD = 2551443  # average lunation length in seconds
+BASE   = 1_610_514_000  # 2021 Jan 13 5:00 UTC new moon
+PERIOD =     2_551_443  # average lunation length in seconds
 
 def moonpixels(t = time.time()): # no tz offset for lunar phase; use UTC
     numerator = (t - BASE) % PERIOD  # seconds into current moon phase
