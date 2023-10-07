@@ -7,6 +7,7 @@ import array
 from machine import Pin
 from ota import OTAUpdater
 from WIFI_CONFIG import SSID, PASSWORD
+#from maps import RINGMAP,MODEMAPS #will uncomment on next release
 import rp2
 
 #configure settings:
@@ -21,7 +22,7 @@ COL = 8 #used for clearer indexing math
 PIN_NUM = 22  #gpio used for Neopixel grid
 brightness = 0.1 # helps with power consumption as well
 # each pixel can pull almost 60 mA at full power.
-# marginal usb power supply will cause glitches/flashes.
+# marginal usb power supply will cause issues.
 
 #PIO neopixel driver
 @rp2.asm_pio(sideset_init=rp2.PIO.OUT_LOW, out_shiftdir=rp2.PIO.SHIFT_LEFT, autopull=True, pull_thresh=24)
@@ -37,7 +38,6 @@ def ws2812():
     label("do_zero")
     nop()                   .side(0)    [T2 - 1]
     wrap()
-
 
 # Create the StateMachine with the ws2812 program, outputting on pin
 sm = rp2.StateMachine(0, ws2812, freq=8_000_000, sideset_base=Pin(PIN_NUM))
@@ -60,12 +60,10 @@ def pixels_show():
 def pixels_set(i, color):
     ar[i] = (color[1]<<16) + (color[0]<<8) + color[2]
  
-
 #lunar phase constants
 BASE = 1610514000  # 2021 Jan 13 5:00 UTC new moon
 PERIOD = 2551443  # average lunation length in seconds
 
-RINGMAP = [3,4,2,5,1,6,0,7,8,15,16,23,24,31,32,39,40,47,48,55,56,63,57,62,58,61,59,60]
 
 def moonpixels(t = time.time()): # no tz offset for lunar phase; use UTC
     numerator = (t - BASE) % PERIOD  # seconds into current moon phase
@@ -155,11 +153,13 @@ set_time()
 print(time.localtime())
 led.off()
 ota_updater = OTAUpdater(SSID, PASSWORD, firmware_url, "main.py")
+ota_updater2 = OTAUpdater(SSID, PASSWORD, firmware_url, "maps.py")
 ota_updater.download_and_install_update_if_available()
+ota_updater2.download_and_install_update_if_available()
 
 while True:
     t=time.localtime(time.time()+tz_offset)
-    s=f'{t[5]:06b}' 
+    s=f'{t[5]:06b}'
     m=f'{t[4]:06b}'
     h=f'{t[3]:06b}'
     d=f'{t[2]:06b}'
