@@ -63,6 +63,7 @@ def pixels_set(i, color):
 #lunar phase constants
 BASE = 1610514000  # 2021 Jan 13 5:00 UTC new moon
 PERIOD = 2551443  # average lunation length in seconds
+RINGMAP = [60,59,61,58,62,57,63,56,55,48,47,40,39,32,31,24,23,16,15,8,7,0,6,1,5,2,4,3]
 
 
 def moonpixels(t = time.time()): # no tz offset for lunar phase; use UTC
