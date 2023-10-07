@@ -151,12 +151,11 @@ else:
 led.on()
 set_time()
 print(time.localtime())
-led.off()
 ota_updater = OTAUpdater(SSID, PASSWORD, firmware_url, "main.py")
 ota_updater2 = OTAUpdater(SSID, PASSWORD, firmware_url, "maps.py")
 ota_updater.download_and_install_update_if_available()
 ota_updater2.download_and_install_update_if_available()
-
+led.off()
 while True:
     t=time.localtime(time.time()+tz_offset)
     s=f'{t[5]:06b}'
