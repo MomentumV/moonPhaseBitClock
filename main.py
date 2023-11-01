@@ -4,13 +4,13 @@ import time
 import struct
 import machine
 import array
+import phase
+import math
 from machine import Pin
-import rp2
-
-# local imports
 from ota import OTAUpdater
 from WIFI_CONFIG import SSID, PASSWORD
-from maps import RINGMAP,MODEMAPS 
+#from maps import RINGMAP,MODEMAPS #will uncomment on next release
+import rp2
 
 #configure settings:
 firmware_url = "https://raw.githubusercontent.com/momentumv/moonPhaseBitClock/main/"
@@ -22,7 +22,7 @@ tz_offset = tz_offset_hrs * 60 * 60
 NUM_LEDS = 64
 COL = 8 #used for clearer indexing math
 PIN_NUM = 22  #gpio used for Neopixel grid
-brightness = 0.1 # helps limit power consumption as well
+brightness = 0.1 # helps with power consumption as well
 # each pixel can pull almost 60 mA at full power.
 # marginal usb power supply will cause issues.
 
@@ -63,20 +63,23 @@ def pixels_set(i, color):
     ar[i] = (color[1]<<16) + (color[0]<<8) + color[2]
  
 #lunar phase constants
-BASE   = 1_610_514_000  # 2021 Jan 13 5:00 UTC new moon
-PERIOD =     2_551_443  # average lunation length in seconds
+# BASE = 1610514000  # 2021 Jan 13 5:00 UTC new moon
+# PERIOD = 2551443  # average lunation length in seconds
+RINGMAP = [60,59,61,58,62,57,63,56,55,48,47,40,39,32,31,24,23,16,15,8,7,0,6,1,5,2,4,3]
+
 
 def moonpixels(t = time.time()): # no tz offset for lunar phase; use UTC
-    numerator = (t - BASE) % PERIOD  # seconds into current moon phase
-    phase = numerator / PERIOD  # fractional phase 0-1
+#     numerator = (t - BASE) % PERIOD  # seconds into current moon phase
+#     phase = numerator / PERIOD  # fractional phase 0-1
+    moonphase = phase.phase(phase.excelDate(t))  #fractional phase 0-1
     nleds= 28 # outer ring of 8x8 matrix
     # since we'll sweep across twice each lunation
     # (once for waxing and once for waning)
     # we need to scale our 0-1 phase up
-    whole = (numerator * 2 * nleds) // PERIOD
+#     whole = (numerator * 2 * nleds) // PERIOD
     #fractional leds will fade in/out
-    fraction = ((numerator * 2 * nleds) % PERIOD) / PERIOD
-    
+#     fraction = ((numerator * 2 * nleds) % PERIOD) / PERIOD
+    fraction, whole = math.modf(moonphase * 2 * nleds)
     #the active led will always be fractional (fading)
     if whole//nleds:
         waxing = False
@@ -88,7 +91,7 @@ def moonpixels(t = time.time()): # no tz offset for lunar phase; use UTC
     value = (int(MOON[0]*fraction),\
              int(MOON[1]*fraction),\
              int(MOON[2]*fraction)  )
-    active_led_index = whole % nleds
+    active_led_index = int(whole % nleds)
 #     print(active_led_index, whole)
     ring[active_led_index] = value
     return ring
@@ -152,23 +155,26 @@ else:
 led.on()
 set_time()
 print(time.localtime())
-ota_updater = OTAUpdater(SSID, PASSWORD, firmware_url, "main.py")
-ota_updater.download_and_install_update_if_available()
+# ota_updater = OTAUpdater(SSID, PASSWORD, firmware_url, "main.py")
+# ota_updater2 = OTAUpdater(SSID, PASSWORD, firmware_url, "maps.py")
+# ota_updater.download_and_install_update_if_available()
+# ota_updater2.download_and_install_update_if_available()
 led.off()
 while True:
-    t=time.localtime(time.time()+tz_offset)
-    s=f'{t[5]:06b}'
+    t=time.localtime(time.time()+tz_offset) #time in seconds since 1970
+    s=f'{t[5]:06b}' #formatted strings of the values in binary
     m=f'{t[4]:06b}'
     h=f'{t[3]:06b}'
     d=f'{t[2]:06b}'
     M=f'{t[1]:06b}'
     for i in range(6):
-        pixels_set(63-(i+1+1*COL),[BLACK,BLUE][int(s[i])])
+        # use the binary digits as indices to select a backgroung vs foreground value for each pixel
+        pixels_set(63-(i+1+1*COL),[BLACK,BLUE][int(s[i])])  
         pixels_set(63-(i+1+2*COL),[BLACK,GREEN][int(m[i])])
         pixels_set(63-(i+1+3*COL),[BLACK,RED][int(h[i])])
         pixels_set(63-(i+1+5*COL),[BLACK,YELLOW][int(d[i])])
         pixels_set(63-(i+1+6*COL),[BLACK,CYAN][int(M[i])])
-    ring_values = moonpixels(time.time()) # no tz offset for moon phase
+    ring_values = moonpixels(time.time()) # no tz offset for moon phase; it is calculated in gmtime
     for i in range(len(RINGMAP)):
         pixels_set(RINGMAP[i],ring_values[i])
     pixels_show()
