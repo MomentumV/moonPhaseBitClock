@@ -3,6 +3,9 @@ A binary clock that also shows the current moon phase. Uses a 8x8 neopixel (ws28
 
 OTA update code from https://github.com/kevinmcaleer/ota
 
+Moon phase emphemeris adapted from https://github.com/pedrokkrause/fourier_ephem
+The data arrays for the longitude were converted to simple lists in a dictionary, and the computation of the dot product was done in pure python to avoid the need for numpy.
+
 Set your wifi credentials in WIFI_CONFIG.py
 
 # How the moon phase is displayed:
