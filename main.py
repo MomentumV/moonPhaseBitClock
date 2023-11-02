@@ -4,14 +4,14 @@ import time
 import struct
 import machine
 import array
-import phase
 import math
 from machine import Pin
+
+import rp2
 from ota import OTAUpdater
 from WIFI_CONFIG import SSID, PASSWORD
 #from maps import RINGMAP,MODEMAPS #will uncomment on next release
-import rp2
-
+import phase
 #configure settings:
 firmware_url = "https://raw.githubusercontent.com/momentumv/moonPhaseBitClock/main/"
 tz_offset_hrs = -4 # deal with daylight savings another time
@@ -155,9 +155,9 @@ else:
 led.on()
 set_time()
 print(time.localtime())
-# ota_updater = OTAUpdater(SSID, PASSWORD, firmware_url, "main.py")
+ota_updater = OTAUpdater(SSID, PASSWORD, firmware_url, "main.py")
 # ota_updater2 = OTAUpdater(SSID, PASSWORD, firmware_url, "maps.py")
-# ota_updater.download_and_install_update_if_available()
+ota_updater.download_and_install_update_if_available()
 # ota_updater2.download_and_install_update_if_available()
 led.off()
 while True:
