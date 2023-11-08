@@ -13,8 +13,8 @@ from WIFI_CONFIG import SSID, PASSWORD
 # from maps import RINGMAP,MODEMAPS #will uncomment on next release
 import phase
 # configure settings:
-firmware_url = "https://\
-                raw.githubusercontent.com/momentumv/moonPhaseBitClock/main/"
+firmware_url = \
+  "https://raw.githubusercontent.com/momentumv/moonPhaseBitClock/main/"
 daylight = 0  # set to 1 for daylight savings time
 tz_offset_hrs = -5 + daylight  # deal with daylight savings another time
 tz_offset = tz_offset_hrs * 60 * 60
