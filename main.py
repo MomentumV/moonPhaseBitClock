@@ -10,25 +10,31 @@ from machine import Pin
 import rp2
 from ota import OTAUpdater
 from WIFI_CONFIG import SSID, PASSWORD
-#from maps import RINGMAP,MODEMAPS #will uncomment on next release
+# from maps import RINGMAP,MODEMAPS #will uncomment on next release
 import phase
-#configure settings:
-firmware_url = "https://raw.githubusercontent.com/momentumv/moonPhaseBitClock/main/"
-tz_offset_hrs = -4 # deal with daylight savings another time
+# configure settings:
+firmware_url = "https://\
+                raw.githubusercontent.com/momentumv/moonPhaseBitClock/main/"
+daylight = 0  # set to 1 for daylight savings time
+tz_offset_hrs = -5 + daylight  # deal with daylight savings another time
 tz_offset = tz_offset_hrs * 60 * 60
 # wifi password configured in WIFI_CONFIG.py
 
 # Configure the number of WS2812 LEDs.
 NUM_LEDS = 64
-COL = 8 #used for clearer indexing math
-PIN_NUM = 22  #gpio used for Neopixel grid
-brightness = 0.1 # helps with power consumption as well
+COL = 8  # used for clearer indexing math
+PIN_NUM = 22  # gpio used for Neopixel grid
+brightness = 0.1  # helps with power consumption as well
 # each pixel can pull almost 60 mA at full power.
 # marginal usb power supply will cause issues.
 
-#PIO neopixel driver
-@rp2.asm_pio(sideset_init=rp2.PIO.OUT_LOW, out_shiftdir=rp2.PIO.SHIFT_LEFT, autopull=True, pull_thresh=24)
+
+@rp2.asm_pio(sideset_init=rp2.PIO.OUT_LOW,
+             out_shiftdir=rp2.PIO.SHIFT_LEFT,
+             autopull=True,
+             pull_thresh=24)
 def ws2812():
+    # PIO neopixel driver
     T1 = 2
     T2 = 5
     T3 = 3
@@ -41,6 +47,7 @@ def ws2812():
     nop()                   .side(0)    [T2 - 1]
     wrap()
 
+
 # Create the StateMachine with the ws2812 program, outputting on pin
 sm = rp2.StateMachine(0, ws2812, freq=8_000_000, sideset_base=Pin(PIN_NUM))
 
@@ -49,69 +56,77 @@ sm.active(1)
 
 # Display a pattern on the LEDs via an array of LED RGB values.
 ar = array.array("I", [0 for _ in range(NUM_LEDS)])
+
+
 def pixels_show():
     dimmer_ar = array.array("I", [0 for _ in range(NUM_LEDS)])
-    for i,c in enumerate(ar):
+    for i, c in enumerate(ar):
         r = int(((c >> 8) & 0xFF) * brightness)
         g = int(((c >> 16) & 0xFF) * brightness)
         b = int((c & 0xFF) * brightness)
-        dimmer_ar[i] = (g<<16) + (r<<8) + b
+        dimmer_ar[i] = (g << 16) + (r << 8) + b
     sm.put(dimmer_ar, 8)
     time.sleep_ms(12)
 
+
 def pixels_set(i, color):
-    ar[i] = (color[1]<<16) + (color[0]<<8) + color[2]
- 
-#lunar phase constants
+    ar[i] = (color[1] << 16) + (color[0] << 8) + color[2]
+
+
+# lunar phase constants
 # BASE = 1610514000  # 2021 Jan 13 5:00 UTC new moon
 # PERIOD = 2551443  # average lunation length in seconds
-RINGMAP = [60,59,61,58,62,57,63,56,55,48,47,40,39,32,31,24,23,16,15,8,7,0,6,1,5,2,4,3]
+RINGMAP = [60, 59, 61, 58, 62, 57, 63, 56, 55, 48, 47, 40, 39,
+           32, 31, 24, 23, 16, 15, 8, 7, 0, 6, 1, 5, 2, 4, 3]
 
 
-def moonpixels(t = time.time()): # no tz offset for lunar phase; use UTC
-#     numerator = (t - BASE) % PERIOD  # seconds into current moon phase
-#     phase = numerator / PERIOD  # fractional phase 0-1
-    moonphase = phase.phase(phase.excelDate(t))  #fractional phase 0-1
-    nleds= 28 # outer ring of 8x8 matrix
+def moonpixels(t=time.time()):  # no tz offset for lunar phase; use UTC
+    #     numerator = (t - BASE) % PERIOD  # seconds into current moon phase
+    #     phase = numerator / PERIOD  # fractional phase 0-1
+    moonphase = phase.phase(phase.excelDate(t))  # fractional phase 0-1
+    nleds = 28  # outer ring of 8x8 matrix
     # since we'll sweep across twice each lunation
     # (once for waxing and once for waning)
     # we need to scale our 0-1 phase up
-#     whole = (numerator * 2 * nleds) // PERIOD
-    #fractional leds will fade in/out
-#     fraction = ((numerator * 2 * nleds) % PERIOD) / PERIOD
+    # whole = (numerator * 2 * nleds) // PERIOD
+    # fractional leds will fade in/out
+    # fraction = ((numerator * 2 * nleds) % PERIOD) / PERIOD
     fraction, whole = math.modf(moonphase * 2 * nleds)
-    #the active led will always be fractional (fading)
+    # the active led will always be fractional (fading)
     if whole//nleds:
         waxing = False
-        ring = [BLACK if i<whole % nleds else MOON for i in range(nleds)]
-        fraction = 1-fraction # waning updates are 'increasing dimming' so we subtract from 1 for brightness
+        ring = [BLACK if i < whole % nleds else MOON for i in range(nleds)]
+        # waning updates are 'increasing dimming'
+        # so we subtract from 1 for brightness
+        fraction = 1-fraction
     else:
         waxing = True
-        ring = [MOON if i<whole else BLACK for i in range(nleds)]
-    value = (int(MOON[0]*fraction),\
-             int(MOON[1]*fraction),\
-             int(MOON[2]*fraction)  )
+        ring = [MOON if i < whole else BLACK for i in range(nleds)]
+    value = (int(MOON[0]*fraction),
+             int(MOON[1]*fraction),
+             int(MOON[2]*fraction))
     active_led_index = int(whole % nleds)
-#     print(active_led_index, whole)
+    # print(active_led_index, whole)
     ring[active_led_index] = value
     return ring
 
-#color definitions
-BLACK  = (0, 0, 0)
-RED    = (255, 0, 0)
+# color definitions
+BLACK  = (0,     0, 0)
+RED    = (255,   0, 0)
 YELLOW = (255, 150, 0)
-GREEN  = (0, 255, 0)
-CYAN   = (0, 255, 255)
-BLUE   = (0, 0, 255)
-PURPLE = (180, 0, 255)
+GREEN  = (0,   255, 0)
+CYAN   = (0,   255, 255)
+BLUE   = (0,     0, 255)
+PURPLE = (180,   0, 255)
 WHITE  = (255, 255, 255)
-MOON   = (127,127,127)
+MOON   = (127, 127, 127)
 COLORS = (BLACK, RED, YELLOW, GREEN, CYAN, BLUE, PURPLE, WHITE)
 
 
-NTP_DELTA = 2208988800  #  keep utc, adjust before display +4*60*60
+NTP_DELTA = 2208988800  # keep utc, adjust before display +4*60*60
 host = "pool.ntp.org"
 led = machine.Pin("LED", machine.Pin.OUT)
+
 
 def set_time():
     NTP_QUERY = bytearray(48)
@@ -123,13 +138,13 @@ def set_time():
         res = s.sendto(NTP_QUERY, addr)
         msg = s.recv(48)
     except OSError as exc:
-        if exc.args[0] == 110: # ETIMEDOUT
+        if exc.args[0] == 110:  # ETIMEDOUT
             time.sleep(2)
             pass
     finally:
         s.close()
     val = struct.unpack("!I", msg[40:44])[0]
-    t = val - NTP_DELTA    
+    t = val - NTP_DELTA
     tm = time.gmtime(t)
     machine.RTC().datetime((tm[0], tm[1], tm[2], tm[6] + 1, tm[3], tm[4], tm[5], 0))
 
@@ -150,7 +165,7 @@ if wlan.status() != 3:
 else:
     print('connected')
     status = wlan.ifconfig()
-    print( 'ip = ' + status[0] )
+    print('ip = ' + status[0])
 
 led.on()
 set_time()
@@ -161,21 +176,23 @@ ota_updater.download_and_install_update_if_available()
 # ota_updater2.download_and_install_update_if_available()
 led.off()
 while True:
-    t=time.localtime(time.time()+tz_offset) #time in seconds since 1970
-    s=f'{t[5]:06b}' #formatted strings of the values in binary
-    m=f'{t[4]:06b}'
-    h=f'{t[3]:06b}'
-    d=f'{t[2]:06b}'
-    M=f'{t[1]:06b}'
+    t = time.localtime(time.time()+tz_offset)  # time in seconds since 1970
+    s = f'{t[5]:06b}'  # formatted strings of the values in binary
+    m = f'{t[4]:06b}'
+    h = f'{t[3]:06b}'
+    d = f'{t[2]:06b}'
+    M = f'{t[1]:06b}'
     for i in range(6):
-        # use the binary digits as indices to select a backgroung vs foreground value for each pixel
-        pixels_set(63-(i+1+1*COL),[BLACK,BLUE][int(s[i])])  
-        pixels_set(63-(i+1+2*COL),[BLACK,GREEN][int(m[i])])
-        pixels_set(63-(i+1+3*COL),[BLACK,RED][int(h[i])])
-        pixels_set(63-(i+1+5*COL),[BLACK,YELLOW][int(d[i])])
-        pixels_set(63-(i+1+6*COL),[BLACK,CYAN][int(M[i])])
-    ring_values = moonpixels(time.time()) # no tz offset for moon phase; it is calculated in gmtime
+        # use the binary digits as indices to select a
+        # backgroung vs foreground value for each pixel
+        pixels_set(63-(i+1+1*COL), [BLACK, BLUE][int(s[i])])
+        pixels_set(63-(i+1+2*COL), [BLACK, GREEN][int(m[i])])
+        pixels_set(63-(i+1+3*COL), [BLACK, RED][int(h[i])])
+        pixels_set(63-(i+1+5*COL), [BLACK, YELLOW][int(d[i])])
+        pixels_set(63-(i+1+6*COL), [BLACK, CYAN][int(M[i])])
+    ring_values = moonpixels(time.time())
+    # no tz offset for moon phase; it is calculated in gmtime
     for i in range(len(RINGMAP)):
-        pixels_set(RINGMAP[i],ring_values[i])
+        pixels_set(RINGMAP[i], ring_values[i])
     pixels_show()
     time.sleep_ms(200)
