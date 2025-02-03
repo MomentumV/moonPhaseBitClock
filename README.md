@@ -11,33 +11,75 @@ Set your wifi credentials in WIFI_CONFIG.py
 # How the moon phase is displayed:
 There's approximately 1 LED change per every 12 hours for the Moon phase.
 
-|   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-|   |   |   |   |   |   |   |   | ⬤ |   |   |   |   |   |   | ⬤ | ⬤ | ⬤ | ⬤ |   |   |   |   | ⬤ | ⬤ | ⬤ | ⬤ |
-|   |   |   |   |   |   | ⌾ | ⌾ |   |   |   |   |   |   | ⌾ | ⌾ | ⬤ |   |   |   |   |   |   | ⌾ | ⌾ | ⬤ |
-|   |   | ⌾ | ⌾ |   | ⌾ | ⌾ | ⌾ |   |   |   |   | ⌾ | ⌾ | ⌾ | ⬤ |   |   |   |   |   | ⌾ | ⌾ | ⌾ | ⬤ |
-|   |   | ⌾ | ⌾ |   | ⌾ | ⌾ | ⌾ | ⌾ | 🡂 |   | ⌾ | ⌾ | ⌾ | ⌾ | ⌾ | ⬤ | 🡂 |   | ⌾ | ⌾ | ⌾ | ⌾ | ⬤ |
-|   |   | M | D |   | h | m | s |   |   | M | D |   | h | m | s | ⬤ |   | M | D |   | h | m | s | ⬤ |
-|   |   | ⌾ | ⌾ |   | ⌾ | ⌾ | ⌾ |   |   |   | ⌾ | ⌾ | ⌾ | ⌾ | ⬤ |   |   |   | ⌾ | ⌾ | ⌾ | ⬤ |
-|   |   | ⌾ | ⌾ |   | ⌾ | ⌾ | ⌾ |   |   |   | ⌾ | ⌾ | ⌾ | ⌾ | ⬤ |   |   | ⌾ | ⌾ | ⌾ | ⬤ |
-|   |   |   |   |   |   |   |   |   |   |   |   |   |   | ⬤ |   | ⬤ | ⬤ | ⬤ |   |   |   |   | ⬤ |
-| New Moon; Every 28.5 days |   | Waxing Crescent; about 4 days |   | First quarter; about 7 days |
-| 🡁 |   | 🡃 |   |   |   |   | ⬤ |   |   |   | ⬤ | ⬤ | ⬤ | ⬤ | ⬤ | ⬤ |   |
-|   | ⌾ | ⌾ |   | ⌾ | ⌾ |   | ⌾ | ⌾ |   | ⌾ |   |   | ⌾ |   | ⬤ |   |   |   | ⌾ | ⌾ | ⌾ | ⬤ |
-|   | ⌾ | ⌾ |   | ⌾ | ⌾ | ⌾ |   |   |   | ⌾ | ⌾ | ⌾ | ⌾ | ⬤ |   |   | ⌾ | ⌾ | ⌾ | ⬤ |
-|   | ⬤ | ⌾ | ⌾ |   | ⌾ | ⌾ | ⌾ |   |   |   | ⌾ | ⌾ | ⌾ | ⌾ | ⬤ |
-|   | ⬤ | M | D |   | h | m | s | ⬤ |   |   |   | M | D |   | h | m | s | ⬤ |
-|   | ⬤ | ⌾ | ⌾ |   | ⌾ | ⌾ | ⌾ |   | ⌾ |   |   | ⌾ |   | ⬤ |   |   | ⌾ | ⌾ | ⌾ | ⬤ |
-|   | ⌾ | ⌾ |   | ⌾ | ⌾ | ⌾ |   |   |   | ⌾ | ⌾ | ⌾ | ⌾ | ⬤ |
-|   |   |   |   |   |   |   |   |   |   |   |   |   |   | ⬤ | ⬤ | ⬤ |   |   | ⬤ |
-| Waning Cresent; about 27 days |   | Waxing Gibbous; About 8.5 days |
-| 🡁 |   | 🡃 |   |   |   |   | ⬤ |   |   | ⬤ | ⬤ | ⬤ | ⬤ | ⬤ | ⬤ | ⬤ |   |
-| ⬤ | ⬤ | ⬤ | ⬤ |   |   |   | ⬤ | ⬤ | ⬤ | ⬤ | ⬤ | ⬤ | ⬤ |
-| ⬤ |   | ⌾ |   | ⌾ | ⌾ | ⌾ |   | ⬤ |   | ⌾ |   | ⌾ | ⌾ | ⌾ | ⬤ |
-| ⬤ |   | ⌾ |   | ⌾ | ⌾ | ⌾ |   | ⬤ |   | ⌾ | ⌾ | ⌾ | ⬤ |
-| ⬤ |   | ⌾ |   | ⌾ | ⌾ | ⌾ | ⌾ | 🡀 | ⬤ |   | ⌾ | ⌾ | ⌾ | ⬤ |
-| ⬤ | M | D |   | h | m | s | ⬤ |   | ⌾ |   | M | D |   | h | m | s | ⬤ |
-| ⬤ | ⌾ | ⌾ |   | ⌾ | ⌾ | ⌾ |   | ⬤ |   | ⌾ | ⌾ | ⌾ | ⬤ |
-| ⬤ | ⌾ | ⌾ |   | ⌾ | ⌾ | ⌾ | ⬤ |   | ⌾ |   | ⌾ | ⬤ | ⌾ | ⌾ | ⬤ |
-| ⬤ | ⬤ | ⬤ | ⬤ |   |   |   | ⬤ | ⬤ | ⬤ | ⬤ | ⬤ | ⬤ | ⬤ |
-| Third Quarter; about 21 days |   | Waning Gibbous; about 16 days | Full; about 14 days |
+<table>
+  <tr>
+    <td style="background-color:#ffffff; color:#000000;"></td>
+    <td style="background-color:#b7b7b7; color:#ff9900; text-align:center;">⬤</td>
+    <td style="background-color:#b7b7b7; color:#ff9900; text-align:center;">⬤</td>
+    <td style="background-color:#b7b7b7; color:#ff9900; text-align:center;">⬤</td>
+    <td style="background-color:#b7b7b7; color:#ff9900; text-align:center;"></td>
+    <td style="background-color:#b7b7b7; color:#ff9900; text-align:center;"></td>
+    <td style="background-color:#b7b7b7; color:#ff9900; text-align:center;">⬤</td>
+    <td style="background-color:#b7b7b7; color:#ff9900; text-align:center;">⬤</td>
+  </tr>
+  <tr>
+    <td style="background-color:#ffffff; color:#000000;"></td>
+    <td style="background-color:#b7b7b7; color:#4a86e8; text-align:center;">⌾</td>
+    <td style="background-color:#b7b7b7; color:#4a86e8; text-align:center;">⌾</td>
+    <td style="background-color:#b7b7b7; color:#ff9900; text-align:center;">⬤</td>
+    <td style="background-color:#b7b7b7; color:#000000; text-align:center;"></td>
+    <td style="background-color:#b7b7b7; color:#00ff00; text-align:center;">⌾</td>
+    <td style="background-color:#b7b7b7; color:#ff9900; text-align:center;">⬤</td>
+    <td style="background-color:#b7b7b7; color:#000000; text-align:center;"></td>
+  </tr>
+  <tr>
+    <td style="background-color:#ffffff; color:#000000;"></td>
+    <td style="background-color:#b7b7b7; color:#00ffff; text-align:center;">⌾</td>
+    <td style="background-color:#b7b7b7; color:#00ff00; text-align:center;">⌾</td>
+    <td style="background-color:#b7b7b7; color:#ff0000; text-align:center;">⌾</td>
+    <td style="background-color:#b7b7b7; color:#ff9900; text-align:center;">⬤</td>
+    <td style="background-color:#b7b7b7; color:#000000; text-align:center;">🡂</td>
+    <td style="background-color:#b7b7b7; color:#ff0000; text-align:center;">⌾</td>
+    <td style="background-color:#b7b7b7; color:#000000; text-align:center;"></td>
+  </tr>
+  <tr>
+    <td style="background-color:#ffffff; color:#000000;"></td>
+    <td style="background-color:#b7b7b7; color:#00ff00; text-align:center;">⌾</td>
+    <td style="background-color:#b7b7b7; color:#000000; text-align:center;">M</td>
+    <td style="background-color:#b7b7b7; color:#000000; text-align:center;">D</td>
+    <td style="background-color:#ffffff; color:#000000;"></td>
+    <td style="background-color:#b7b7b7; color:#000000; text-align:center;">h</td>
+    <td style="background-color:#b7b7b7; color:#000000; text-align:center;">m</td>
+    <td style="background-color:#b7b7b7; color:#ff9900; text-align:center;">⬤</td>
+  </tr>
+  <tr>
+    <td style="background-color:#ffffff; color:#000000;"></td>
+    <td style="background-color:#b7b7b7; color:#4a86e8; text-align:center;">⌾</td>
+    <td style="background-color:#b7b7b7; color:#00ff00; text-align:center;">⌾</td>
+    <td style="background-color:#b7b7b7; color:#ff9900; text-align:center;">⬤</td>
+    <td style="background-color:#b7b7b7; color:#ffffff; text-align:center;"></td>
+    <td style="background-color:#b7b7b7; color:#00ff00; text-align:center;">⌾</td>
+    <td style="background-color:#b7b7b7; color:#ff0000; text-align:center;">⌾</td>
+    <td style="background-color:#b7b7b7; color:#000000; text-align:center;"></td>
+  </tr>
+  <tr>
+    <td style="background-color:#ffffff; color:#000000;"></td>
+    <td style="background-color:#b7b7b7; color:#00ff00; text-align:center;">⌾</td>
+    <td style="background-color:#b7b7b7; color:#000000; text-align:center;"></td>
+    <td style="background-color:#b7b7b7; color:#4a86e8; text-align:center;">⬤</td>
+    <td style="background-color:#b7b7b7; color:#ff0000; text-align:center;"></td>
+    <td style="background-color:#b7b7b7; color:#000000; text-align:center;"></td>
+    <td style="background-color:#b7b7b7; color:#ff9900; text-align:center;">⬤</td>
+    <td style="background-color:#b7b7b7; color:#000000; text-align:center;"></td>
+  </tr>
+  <tr>
+    <td style="background-color:#ffffff; color:#000000;"></td>
+    <td style="background-color:#b7b7b7; color:#ff9900; text-align:center;"></td>
+    <td style="background-color:#b7b7b7; color:#000000; text-align:center;"></td>
+    <td style="background-color:#b7b7b7; color:#ff9900; text-align:center;">⬤</td>
+    <td style="background-color:#ffffff; color:#000000;"></td>
+    <td style="background-color:#b7b7b7; color:#4a86e8; text-align:center;"></td>
+    <td style="background-color:#b7b7b7; color:#4a86e8; text-align:center;">⬤</td>
+    <td style="background-color:#b7b7b7; color:#ff9900; text-align:center;">⬤</td>
+  </tr>
+</table>
