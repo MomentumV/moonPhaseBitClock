@@ -4,11 +4,11 @@ A binary clock that also shows the current moon phase. Uses a 8x8 neopixel (ws28
 OTA update code from https://github.com/kevinmcaleer/ota
 
 Moon phase emphemeris adapted from https://github.com/pedrokkrause/fourier_ephem
-The data arrays for the longitude were converted to simple lists in a dictionary, and the computation of the dot product was done in pure python to avoid the need for numpy.
+The data arrays for the longitude were converted to simple lists in a dictionary, and the computation of the dot product was done in pure python to avoid the need for numpy (which is not readily available in micropython).
 
 Set your wifi credentials in WIFI_CONFIG.py
 
 # How the moon phase is displayed:
 There's approximately 1 LED change per every 12 hours for the Moon phase.
 
-<iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vSBAbLICryW-UTT_7OwHbRlJCfbNjle9r8l-Votz0u1gCDcwYpMo_h5XaTcRV6ItElYIqPimeQAn60w/pubhtml?gid=2054537010&amp;single=true&amp;widget=true&amp;headers=false"></iframe>
+<iframe src="docs/Moon%20Phase%20Examples.html"></iframe>
