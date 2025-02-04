@@ -2,7 +2,7 @@
 import math
 
 ephemeris = {
-    'terms' : 20,
+    # 'terms' : 20, Each of the longitude parameters have 20 terms. These are taken from https://github.com/pedrokkrause/fourier_ephem
     'lon_amp' : [\
     2.0997114145913383, 0.058788819732109025, 0.021817807823316257, 0.015287461678069016, 0.05704928918395102, \
     1.274022543400498, 0.04088947470233743, 0.03480907580344298, 6.288866525864952, 0.03038311209712805, \
