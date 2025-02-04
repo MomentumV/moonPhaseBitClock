@@ -30,9 +30,9 @@ def dot(list1, list2):
     return sum([i*j for (i,j) in zip(list1,list2)])
 
 def phase(day):
-    terms = [math.sin(day * omega + phase) for (omega,phase) in zip(ephemeris['lon_omega'],ephemeris['lon_phases'])]
+    temp = [math.sin(day * omega + phase) for (omega,phase) in zip(ephemeris['lon_omega'],ephemeris['lon_phases'])]
     # dot product of lon_amp and the vector constructed above
-    correction = dot(ephemeris['lon_amp'],terms)
+    correction = dot(ephemeris['lon_amp'],temp)
     angle = correction + 360/29.530589 *  day - 262827.5235067
     percent = (angle % 360)/360
     return percent
