@@ -1,0 +1,393 @@
+
+substitutions:
+  devicename: "miniarray"
+  friendly_name: "8x8 pixel matrix "
+  device_description: " (LED Pixel matrix 8x8, ESP32-S3)"
+  rotation: "90"   # choose 0, 90, 180, or 270
+ 
+globals:
+  - id: lunar_phase_value
+    type: float
+    restore_value: no
+    initial_value: '0.0'
+  - id: leds_state
+    type: std::array<int, 64>
+    restore_value: no
+    initial_value: '{0}'
+  
+esp32:
+  board: esp32-s3-devkitc-1
+  framework:
+    type: arduino
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  ap:
+    ssid: "MoonClock-config"
+    password: "esphome1234"
+
+captive_portal:
+
+logger:
+  level: WARN
+  baud_rate: 0 # disable logging over uart
+
+api:
+  encryption:
+    key: !secret api_key
+
+
+ota:
+  - platform: esphome
+    password: !secret ota_password
+
+web_server:
+  port: 80
+
+
+esphome:
+  name: ${devicename}
+  friendly_name: ${friendly_name}
+  comment: "${device_description}"
+
+  platformio_options:
+    board_build.flash_mode: dio
+  on_boot:
+    priority: -10
+    then:
+      - light.turn_on:
+          id: pixel_matrix
+          effect: "Binary MoonClock"
+          brightness: 30%
+      - script.execute: update_lunar_phase
+
+
+sensor:
+  - platform: template
+    name: "Lunar Phase Fraction"
+    id: lunar_phase_fraction_sensor
+    unit_of_measurement: "%"
+    update_interval: 10s
+    lambda: |-
+      return id(lunar_phase_value) * 100.0;
+
+light:
+  - platform: neopixelbus
+    name: 'miniarray'
+    id: pixel_matrix
+    type: RGB
+    variant: WS2811
+    pin: GPIO14
+    num_leds: 64
+    gamma_correct: 1
+    color_correct: [30%,30%,30%]
+    effects:
+      - addressable_lambda:
+          name: "Binary MoonClock"
+          update_interval: 1000ms
+          lambda: |-
+            auto now = id(my_time).now();
+            it.all() = Color(0,0,0);
+            
+            // Define colors here (substitutions won't work as C++)
+            Color MONTH(0,150,150);
+            Color DAY(150,150,0);
+            Color HOUR(255,0,0);
+            Color MINUTE(0,255,0);
+            Color SECOND(0,0,255);
+            Color MOON(100,100,100);
+            Color BLACK(0,0,0);
+
+            // --- Rotation helper ---
+            auto set_pixel = [&](int x, int y, Color c) {
+              // 1. Store the logical state (before rotation)
+              int logical_idx = x + y * 8;
+              id(leds_state)[logical_idx] = (c.r << 16) | (c.g << 8) | c.b;
+
+              // 2. Apply rotation for physical LED addressing
+
+              int x_prime = x;
+              int y_prime = y;
+
+              #if ${rotation} == 90
+                x_prime = 7 - y;
+                y_prime = x;
+              #elif ${rotation} == 180
+                x_prime = 7 - x;
+                y_prime = 7 - y;
+              #elif ${rotation} == 270
+                x_prime = y;
+                y_prime = 7 - x;
+              #endif
+
+              int idx = x_prime + y_prime * 8;
+              it[idx] = c;
+            };
+
+            // --- Binary clock drawing (local time) ---
+            if (!now.is_valid()) {
+              for (int x = 1; x <= 6; x++) {
+                set_pixel(x, 3, Color(255,0,0));
+              }
+            } else {
+              int values[5] = { now.month, now.day_of_month, now.hour, now.minute, now.second };
+              Color row_colors[5] = {
+                MONTH, DAY, HOUR, MINUTE, SECOND};
+              int row_map[5] = {1, 2, 4, 5, 6};
+              for (int idx = 0; idx < 5; idx++) {
+                int val = values[idx];
+                int y = row_map[idx];
+                for (int bit = 0; bit < 6; bit++) {
+                  if ((val >> bit) & 1) {
+                    int x = 1 + bit;
+                    set_pixel(x, y, row_colors[idx]);
+                  }
+                }
+              }
+            }
+
+            // --- Lunar ring overlay ---
+            static const int RINGMAP[28] = {
+              60,59,61,58,62,57,63,56,
+              55,48,47,40,39,32,31,24,
+              23,16,15,8,7,0,6,1,
+              5,2,4,3
+            };
+
+            double moonphase = id(lunar_phase_value);
+            const int nleds = 28;
+            double scaled = moonphase * 2.0 * nleds;
+            double fraction = scaled - floor(scaled);
+            int whole = (int)floor(scaled);
+
+            bool waxing = (whole / nleds == 0);
+            for (int i = 0; i < nleds; i++) {
+              Color c;
+              if (waxing) {
+                c = (i < whole) ? MOON : BLACK;
+              } else {
+                c = (i < (whole % nleds)) ? BLACK : MOON;
+              }
+              if (!waxing) fraction = 1.0 - fraction;
+              if (i == whole % nleds) {
+                c = Color(
+                  (int)(MOON.r * fraction),
+                  (int)(MOON.g * fraction),
+                  (int)(MOON.b * fraction)
+                );
+              }
+              // Map ring LED through rotation helper
+              int idx = RINGMAP[i];
+              int x = idx % 8;
+              int y = idx / 8;
+              set_pixel(x, y, c);
+            }
+      
+      - addressable_rainbow:
+      - addressable_twinkle:
+      - addressable_scan:
+      - addressable_lambda:
+          name: Fire
+          update_interval: 70ms
+          lambda: |-
+            const bool colmajor = false;
+            const bool mattop = false;
+            const bool matleft = true;
+            const bool zigzag = false;
+            const uint16_t rows = 8;
+            const uint16_t cols = 8;
+            const uint16_t offsetx = 0;
+            const uint16_t offsety = 0;
+            const uint8_t maxflare = 2;
+            const uint8_t flarerows = 5;
+            const uint8_t flarechance = 30;
+            const uint8_t flaredecay = 14;
+            const uint32_t colors[] = {0x000000,0x100000,0x300000,0x600000,0x800000,0xA00000,0xC02000,0xC04000,0xC06000,0xC08000,0x807080};
+            const uint8_t NCOLORS = (sizeof(colors)/sizeof(colors[0]));
+
+            static uint8_t nflare = 0;
+            static uint32_t flare[maxflare];
+            static uint8_t pix[rows][cols];
+            static bool needsinit = true;
+            static long t = 0;
+            
+            uint16_t b, d, i, j, k, l, n, x, y, z;
+            uint16_t phy_w = cols;
+            uint16_t phy_h = rows;
+            uint16_t phy_x = 0;
+            uint16_t phy_y = 0;
+            
+            
+            if ( needsinit == true ) {
+              needsinit = false;
+              for ( i=0; i<rows; ++i ) {
+                for ( j=0; j<cols; ++j ) {
+                  if ( i == 0 ) pix[i][j] = NCOLORS - 1;
+                  else pix[i][j] = 0;
+                }
+              }
+            }
+            
+            // First, move all existing heat points up the display and fade
+            for ( i=rows-1; i>0; --i ) {
+              for ( j=0; j<cols; ++j ) {
+                uint8_t n = 0;
+                if ( pix[i-1][j] > 0 )
+                  n = pix[i-1][j] - 1;
+                pix[i][j] = n;
+              }
+            }
+          
+            // Heat the bottom row
+            for ( j=0; j<cols; ++j ) {
+              i = pix[0][j];
+              if ( i > 0 ) {
+                pix[0][j] = random(NCOLORS-6, NCOLORS-2);
+              }
+            }
+
+            // Update existing flares
+            for ( i=0; i<nflare; ++i ) {
+              x = flare[i] & 0xff;
+              y = (flare[i] >> 8) & 0xff;
+              z = (flare[i] >> 16) & 0xff;
+              b = z * 10 / flaredecay + 1;
+              for ( k=(y-b); k<(y+b); ++k ) {
+                for ( int l=(x-b); l<(x+b); ++l ) {
+                  if ( k >=0 && l >= 0 && k < rows && l < cols ) {
+                    d = ( flaredecay * sqrt((x-l)*(x-l) + (y-k)*(y-k)) + 5 ) / 10;
+                    n = 0;
+                    if ( z > d ) n = z - d;
+                    if ( n > pix[k][l] ) { // can only get brighter
+                      pix[k][l] = n;
+                    }
+                  }
+                }
+              }
+              if ( z > 1 ) {
+                flare[i] = (flare[i] & 0xffff) | ((z-1)<<16);
+              } else {
+                // This flare is out
+                for ( j=i+1; j<nflare; ++j ) {
+                  flare[j-1] = flare[j];
+                }
+                --nflare;
+              }
+            }
+            // New Flare
+            if ( nflare < maxflare && random(1,101) <= flarechance ) {
+              x = random(0, cols);
+              y = random(0, flarerows);
+              z = NCOLORS - 1;
+              b = z * 10 / flaredecay + 1;
+              flare[nflare++] = (z<<16) | (y<<8) | (x&0xff);
+              for ( k=(y-b); k<(y+b); ++k ) {
+                for ( int l=(x-b); l<(x+b); ++l ) {
+                  if ( k >=0 && l >= 0 && k < rows && l < cols ) {
+                    d = ( flaredecay * sqrt((x-l)*(x-l) + (y-k)*(y-k)) + 5 ) / 10;
+                    n = 0;
+                    if ( z > d ) n = z - d;
+                    if ( n > pix[k][l] ) { // can only get brighter
+                      pix[k][l] = n;
+                    }
+                  }
+                }
+              }
+            }
+            // Draw
+            if ( colmajor == true ) {
+              phy_w = rows;
+              phy_h = cols;
+            }
+            for ( uint16_t row=0; row<rows; ++row ) {
+              for ( uint16_t col=0; col<cols; ++col ) {
+                if ( colmajor == true ) {
+                    phy_x = offsetx + (uint16_t) row;
+                    phy_y = offsety + (uint16_t) col;
+                } else {
+                    phy_x = offsetx + (uint16_t) col;
+                    phy_y = offsety + (uint16_t) row;
+                }
+                if ( matleft == true && zigzag == true ) {
+                  if ( ( phy_y & 1 ) == 1 ) {
+                    phy_x = phy_w - phy_x - 1;
+                  }
+                } else if ( matleft == false && zigzag == true ) {
+                  if ( ( phy_y & 1 ) == 0 ) {
+                    phy_x = phy_w - phy_x - 1;
+                  }
+                } else if ( matleft == false ) {
+                  phy_x = phy_w - phy_x - 1;
+                }
+                if ( mattop == true && colmajor == true ) {
+                  phy_x = phy_w - phy_x - 1;
+                } else if (mattop) {
+                  phy_y = phy_h - phy_y - 1;
+                }
+                it[phy_x + phy_y * phy_w] = ESPColor(colors[pix[row][col]]);
+              }
+            }
+
+time:
+  - platform: sntp
+    id: my_time
+
+
+button:
+  - platform: template
+    name: "Update Lunar Phase"
+    id: update_lunar_phase_button
+    on_press:
+      - script.execute: update_lunar_phase
+
+script:
+  - id: update_lunar_phase
+    then:
+      - lambda: |-
+          auto now = id(my_time).now();
+          if (!now.is_valid()) return;
+
+          // Convert to Excel-style day count
+          double t_seconds = now.timestamp;
+          double day = 25569.0 + t_seconds / (60.0 * 60.0 * 24.0);
+
+          // Ephemeris arrays
+          static const double lon_amp[20] = {
+            2.0997114145913383, 0.058788819732109025, 0.021817807823316257, 0.015287461678069016, 0.05704928918395102,
+            1.274022543400498, 0.04088947470233743, 0.03480907580344298, 6.288866525864952, 0.03038311209712805,
+            0.008553210965104922, 0.045749613060558324, 0.6583238862729489, 0.0067867178305394665, 0.21362889970023194,
+            0.11439054914258501, 0.010668730644463246, 0.05332142314318798, 0.010038139997356752, 0.012530924996523632
+          };
+          static const double lon_omega[20] = {
+            0.017201958018643045, 0.030516812233724676, 0.03440384179284957, 0.03625385094011172, 0.18030842801487001,
+            0.19751028046764654, 0.21082531611323058, 0.21276765085018443, 0.22802714563071028, 0.24522923972952337,
+            0.3950207554073134, 0.4083356187778078, 0.4255374274835673, 0.44274080680761646, 0.45605429838949113,
+            0.46179141433928894, 0.6230477436021405, 0.6535647361095923, 0.6840814350677442, 0.6898185676295449
+          };
+          static const double lon_phases[20] = {
+            3.089604216647668, 1.1899836208633094, 3.032002167838634, -2.4738768799094597, 0.5442551956665871,
+            0.49595791597236416, -1.4071829419118291, 2.696913578318282, -1.4571943878878129, -4.655907951124683,
+            0.9888568957693797, -0.9144471671920004, -0.9613016042428135, 2.073545293143804, -2.9146531404270615,
+            2.8430869974361563, -0.46750483657955993, -2.424386739471904, 1.9115975754293626, 1.3857751954942001
+          };
+
+          // Compute correction
+          double correction = 0.0;
+          for (int i = 0; i < 20; i++) {
+            correction += lon_amp[i] * sin(day * lon_omega[i] + lon_phases[i]);
+          }
+
+          // Compute lunar phase fraction
+          double angle = correction + (360.0 / 29.530589) * day - 262827.5235067;
+          double percent = fmod(angle, 360.0) / 360.0;
+          if (percent < 0) percent += 1.0;
+
+          id(lunar_phase_value) = percent;
+          ESP_LOGD("lunar", "Lunar phase fraction: %.3f", percent);
+
+interval:
+  - interval: 1h
+    then:
+      - script.execute: update_lunar_phase
+  
